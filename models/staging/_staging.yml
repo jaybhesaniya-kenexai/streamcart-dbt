@@ -1,0 +1,92 @@
+version: 2
+
+models:
+
+  - name: stg_products
+    description: Cleaned product catalog.
+
+    tests:
+      - dbt_utils.expression_is_true:
+            expression: "list_price >= cost_price"
+
+    columns:
+      - name: product_id
+        description: Unique identifier for the product.
+        tests:
+          - unique
+          - not_null
+
+      - name: margin_pct
+        description: Product margin percentage calculated from cost and list price.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+                min_value: 0
+                max_value: 100
+
+      - name: list_price
+        description: Selling price of the product     
+
+      - name: cost_price
+        description: Cost incurred to acquire or manufacture the product.
+
+
+
+  - name: stg_orders
+    description: Cleaned and standardized order events data.
+
+    columns:
+      - name: net_amount
+        description: Total order amount after discounts and adjustments.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+                min_value: 0
+                max_value: 1000000
+
+      - name: email
+        description: Customer email address associated with the order.
+        tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+                regex: '^[a-z0-9._%+-]+@[a-z0-9.-]+[.][a-z]{2,}$'
+                config:
+                   enabled: "{{ target.name == 'prod' }}"
+
+      - name: event_id
+        description: Unique identifier for the order event.
+        tests:
+          - not_null
+
+      - name: event_type
+        description: Type of customer event recorded.
+        tests:
+          - accepted_values: 
+               values: ['order_placed','order_cancelled','add_to_cart','checkout','page_view']
+
+      - name: payment_status
+        tests:
+           - accepted_values:
+                values:  ['success','failed','pending']
+
+      - name: currency_code                   
+        tests:
+           - accepted_values:
+                values:  ['INR','USD','GBP','AED','EUR']
+           - valid_currency
+
+
+      - name: quantity
+        description: Quantity ordered
+        tests:
+           - not_null
+
+      - name: customer_id
+        tests:
+           - not_null
+
+      - name: product_id
+        tests:
+          - relationships:
+             to: ref('stg_products')
+             field: product_id     
+      
+      - name: order_date
+        

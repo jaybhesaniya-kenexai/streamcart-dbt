@@ -1,0 +1,8 @@
+version: 2
+
+seeds:
+  - name: channel_mapping
+    description: Channel lookup table
+
+  - name: country_config
+    description: Country configuration lookup table
