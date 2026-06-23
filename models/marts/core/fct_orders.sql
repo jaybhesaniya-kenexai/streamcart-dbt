@@ -6,9 +6,7 @@
     cluster_by=['order_date'] ,
 
     post_hook=[
-        "alter table {{ this }} recluster",
-
-        "{% if target.name == 'prod' %}
+            "{% if target.name == 'prod' %}
             grant select on {{ this }} to role prod_reader
          {% endif %}"
     ]
